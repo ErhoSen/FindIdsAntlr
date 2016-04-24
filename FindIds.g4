@@ -40,7 +40,7 @@ apply locals[int arity=0]: id=knownId OPEN balArgs=balancedArgs CLOSE
         int arity = $balArgs.arity;
         if ( realArity == arity ){
             System.out.println("Found id " + id + " [Line: " + $id.start.getLine() + lineCharPos($id.start));
-        } else { // ERROR wrong number of arguments for id {ID} ({arity} should be {N}) [Line: {L}, Position: {P}]
+        } else {
             System.out.println("ERROR wrong number of arguments for id " + id + " (" + arity + " should be " + realArity + ")" + lineCharPos($id.start));
         }
     };

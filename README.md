@@ -7,7 +7,8 @@ Antlr realization of finding ids from map in text.
 ```
 
 ## Example
-### text.txt
+### knownIdsMap = { f=3, k=2, m=5 }
+### data.txt
 ```
 asdfqwerwqef qaf	wer	asDFADFQ QAW) ( ( z
 f (
@@ -18,7 +19,7 @@ f (
 			)
 		)
 	)
-) f(1,2,3,1)
+) f(1,2,3,1) k(2()
 ```
 ### Output
 ```
@@ -33,5 +34,7 @@ Found id m [Line: 4 [Line: 4, Position: 5]
 Found id k [Line: 3 [Line: 3, Position: 7]
 Found id f [Line: 2 [Line: 2, Position: 0]
 ERROR wrong number of arguments for id f (3 should be 2) [Line: 10, Position: 2]
+line 10:16 extraneous input '(' expecting {')', COMMA}
+ERROR wrong number of arguments for id k (0 should be 1) [Line: 10, Position: 13]
 ######## knownIdsMap={f=3, k=2, m=5}
 ```
