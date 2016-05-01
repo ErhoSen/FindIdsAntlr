@@ -2,50 +2,67 @@ grammar FindIds;
 
 @header {
     import java.util.HashMap;
+    import java.util.ArrayList;
+    import java.util.Arrays;
     import org.antlr.v4.runtime.Token;
 }
 
 @members {
-    public static HashMap<String, Integer> knownIdsMap;
+    public static HashMap<String, ArrayList<Integer>> knownIdsMap;
     static {
-        knownIdsMap = new HashMap<String, Integer>();
-        knownIdsMap.put("f", 3);
-        knownIdsMap.put("k", 2);
-        knownIdsMap.put("m", 5);
+        knownIdsMap = new HashMap<String, ArrayList<Integer>>();
+        ArrayList<Integer> f = new ArrayList(Arrays.asList(0, 1, 2, 3));
+        ArrayList<Integer> c = new ArrayList(Arrays.asList(7, 4));
+        knownIdsMap.put("f", f);
+        knownIdsMap.put("c", c);
     }
 
     public static String lineCharPos(Token token) {
         return " [Line: " + token.getLine() + ", Position: " + token.getCharPositionInLine() + "]";
     }
+
+    public static void knownIdOutput(Token idTok, int arity) {
+        String id = idTok.getText();
+        if ( knownIdsMap.get(id).contains(arity) ){
+            System.out.println("Found id " + id + " satisfied arity " + arity + lineCharPos(idTok));
+        } else {
+            System.out.println(
+                "ERROR wrong number of arguments for id " + id +  " (found " + arity + 
+                ", can be " + knownIdsMap.get(id) + ")" + lineCharPos(idTok)
+            );
+        }
+    }
+
+    public static void unknownIdOutput(Token idTok) {
+        System.out.println("ERROR <unknown_id>: " + idTok.getText() + lineCharPos(idTok));
+    }
+
+    public static void debugInfo() {
+        System.out.println("######## knownIdsMap="+ knownIdsMap);
+    }
 }
 
 prog: text*
     {
-        System.out.println("######## knownIdsMap="+ knownIdsMap);
+        debugInfo();
     };
 
-text: butId | apply;
+text: butId? apply | butId;
 
 butId: OPEN | COMMA | CLOSE | id=unknownId
     {
-        String id = $id.start.getText();
-        System.out.println("ERROR <unknown_id>: " + id + lineCharPos($id.start));
+        unknownIdOutput($id.start);
     };
 
-apply locals[int arity=0]: id=knownId OPEN balArgs=balancedArgs CLOSE
+apply: id=knownId OPEN balArgs=balancedArgs CLOSE 
+    { 
+        knownIdOutput($id.start, $balArgs.arity); 
+    };
+
+balancedArgs returns [int arity=0]: balArg=balancedArg? 
     {
-        String id = $id.start.getText();
-        // int realArity = knownIdsMap.get(id).size() - 1;
-        int realArity = knownIdsMap.get(id) - 1;
-        int arity = $balArgs.arity;
-        if ( realArity == arity ){
-            System.out.println("Found id " + id + " [Line: " + $id.start.getLine() + lineCharPos($id.start));
-        } else {
-            System.out.println("ERROR wrong number of arguments for id " + id + " (" + arity + " should be " + realArity + ")" + lineCharPos($id.start));
-        }
-    };
-
-balancedArgs returns [int arity]: {$arity = 0;} balancedArg? (COMMA balancedArg {$arity++;})*;
+        if ( $balArg.text != null) { $arity++; }
+    } ( COMMA balancedArg {$arity++;} )*;
 
 balancedArg: INT | apply;
 
@@ -61,38 +78,6 @@ UNKNOWNID : [a-zA-Z]+;
 OPEN : '(' ;
 CLOSE : ')' ;
 COMMA : [,] ;
-
-
-//if (knownIdsMap.get($id.currentId) != null){
-//    System.out.println(knownIdsMap.get(current));
-//    System.out.println($balArgs.arity);
-//    if (knownIdsMap.get(current) - 1 == $balArgs.arity){
-//        System.out.println("FOUND PATTERN: func " + current + '(' + $balArgs.text + ") FOR " + current + '(' + knownIdsMap.get(current) + ')');
-//    }
-//}
-
-//anId returns [String currentId = ""]: id=IDENTIFIER
-//    {
-//        if ( knownIdsMap.containsKey($id.text) ) {
-//            System.out.println("Found! "+ $id.text);
-//            foundIds.add($id.text);
-//        } else {
-//            System.out.println("Not Found! "+ $id.text);
-//            unknownIds.add($id.text);
-//        }
-//        currentId = $id.text;
-//    };
-
-//apply locals[int arity=0]: balArgs=balancedArgs 
-//    {
-//        if (knownIdsMap.get(current) != null){
-//            System.out.println(knownIdsMap.get(current));
-//            System.out.println($balArgs.arity);
-//            if (knownIdsMap.get(current) - 1 == $balArgs.arity){
-//                System.out.println("FOUND PATTERN: func " + current + '(' + $balArgs.text + ") FOR " + current + '(' + knownIdsMap.get(current) + ')');
-//            }
-//        }
-//    };
 
 
 //text: butId
