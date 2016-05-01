@@ -7,7 +7,7 @@ Antlr realization of finding ids from map in text.
 ```
 
 ## Example
-### knownIdsMap = { f=3, k=2, m=5 }
+### knownIdsMap = { c=[7, 4], f=[0, 1, 2, 3] }
 ### data.txt
 ```
 f() ASDAS 
