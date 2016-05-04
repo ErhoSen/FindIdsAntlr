@@ -13,7 +13,7 @@ Antlr realization of finding ids from map in text.
 f() ASDAS 
 c(1,2,3,4,f(1,f()),6,7)
 f(1)
-f(1,2)
+f(1,-2)
 f(1,2,3)
 f(1,2,3,4)
 ```

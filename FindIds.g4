@@ -71,7 +71,7 @@ unknownId: {!knownIdsMap.containsKey($id)}? id=IDENTIFIER;
 
 
 IDENTIFIER : [a-zA-Z]+ ;
-INT : [0-9]+ ;
+INT : [-+]?[0-9]+ ;
 WS : [ \t\r\n]+ -> skip ;
 
 UNKNOWNID : [a-zA-Z]+;
