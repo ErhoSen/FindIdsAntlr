@@ -3,7 +3,6 @@ grammar FindIds;
 @header {
     import java.util.HashMap;
     import java.util.ArrayList;
-    import java.util.Arrays;
     import org.antlr.v4.runtime.Token;
 }
 
@@ -11,10 +10,6 @@ grammar FindIds;
     public static HashMap<String, ArrayList<Integer>> knownIdsMap;
     static {
         knownIdsMap = new HashMap<String, ArrayList<Integer>>();
-        ArrayList<Integer> f = new ArrayList(Arrays.asList(0, 1, 2, 3));
-        ArrayList<Integer> c = new ArrayList(Arrays.asList(7, 4));
-        knownIdsMap.put("f", f);
-        knownIdsMap.put("c", c);
     }
 
     public static String lineCharPos(Token token) {
@@ -37,6 +32,10 @@ grammar FindIds;
         System.out.println("ERROR <unknown_id>: " + idTok.getText() + lineCharPos(idTok));
     }
 
+    public static void undefUnknownIdOutput(Token idTok) {
+        System.out.println("ERROR undefine <unknown_id>: " + idTok.getText() + lineCharPos(idTok));
+    }
+
     public static void debugInfo() {
         System.out.println("######## knownIdsMap="+ knownIdsMap);
     }
@@ -47,7 +46,41 @@ prog: text*
         debugInfo();
     };
 
-text: butId? apply | butId;
+text: butId? defineBlock? apply | butId;
+
+defineBlock: '{' define* undef* '}';
+
+define: DEFINE declaration;
+
+declaration: id=unknownId OPEN defArgs=defineArgs CLOSE val=value
+    {
+        ArrayList<Integer> l = new ArrayList<Integer>();
+        for (int i=0; i<$defArgs.arity; i++){ l.add(i); }
+        knownIdsMap.put($id.text, l);
+    };
+
+defineArgs returns [int arity=0]: id=arg? 
+    {
+        if ( $id.text != null) { $arity++; }
+    } ( COMMA arg { $arity++; } )*;
+
+value: INT;
+
+undef: UNDEF id=arg
+    {
+        if (knownIdsMap.containsKey($id.text)){
+            try{
+                knownIdsMap.remove($id.text);
+            }
+            catch (Exception e) {
+                System.out.println("error: " + npe);
+            }
+        } else {
+            undefUnknownIdOutput($id.start);
+        }
+    };
+
+arg: IDENTIFIER;
 
 butId: OPEN | COMMA | CLOSE | id=unknownId
     {
@@ -71,13 +104,15 @@ unknownId: {!knownIdsMap.containsKey($id)}? id=IDENTIFIER;
 
 
 IDENTIFIER : [a-zA-Z]+ ;
+DEFINE : '#define' ;
+UNDEF : '#undef' ;
 INT : [-+]?[0-9]+ ;
 WS : [ \t\r\n]+ -> skip ;
 
-UNKNOWNID : [a-zA-Z]+;
+UNKNOWNID : [a-zA-Z]+ ;
 OPEN : '(' ;
 CLOSE : ')' ;
-COMMA : [,] ;
+COMMA : ',' ;
 
 
 //text: butId
