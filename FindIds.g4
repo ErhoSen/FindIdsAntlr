@@ -3,6 +3,7 @@ grammar FindIds;
 @header {
     import java.util.HashMap;
     import java.util.ArrayList;
+    import java.util.Arrays;
     import org.antlr.v4.runtime.Token;
 }
 
@@ -10,6 +11,8 @@ grammar FindIds;
     public static HashMap<String, ArrayList<Integer>> knownIdsMap;
     static {
         knownIdsMap = new HashMap<String, ArrayList<Integer>>();
+        ArrayList<Integer> f = new ArrayList(Arrays.asList(0, 1, 2, 3));
+        knownIdsMap.put("f", f);
     }
 
     public static String lineCharPos(Token token) {
@@ -17,6 +20,7 @@ grammar FindIds;
     }
 
     public static void knownIdOutput(Token idTok, int arity) {
+    	System.out.println("ASDASDASDASDASDASDASDASDASDASDASDS");
         String id = idTok.getText();
         if ( knownIdsMap.get(id).contains(arity) ){
             System.out.println("Found id " + id + " satisfied arity " + arity + lineCharPos(idTok));
@@ -46,43 +50,37 @@ prog: text*
         debugInfo();
     };
 
-text: butId? defineBlock? apply | butId;
+//text: define | undef | butId | apply ;
+text: butId | butId apply;
 
-defineBlock: '{' define* undef* '}';
+//define: DEFINE declaration;
 
-define: DEFINE declaration;
+//undef: UNDEF id=arg
+  //  {
+    //    if (knownIdsMap.containsKey($id.text)) {
+      //  	knownIdsMap.remove($id.text);
+        //} else {
+          //  undefUnknownIdOutput($id.start);
+        //}
+//    };
 
-declaration: id=unknownId OPEN defArgs=defineArgs CLOSE val=value
-    {
-        ArrayList<Integer> l = new ArrayList<Integer>();
-        for (int i=0; i<$defArgs.arity; i++){ l.add(i); }
-        knownIdsMap.put($id.text, l);
-    };
+//declaration: id=unknownId OPEN defArgs=defineArgs CLOSE val=value
+  //  {
+    //    ArrayList<Integer> l = new ArrayList<Integer>();
+      //  for (int i=0; i<$defArgs.arity; i++){ l.add(i); }
+        //knownIdsMap.put($id.text, l);
+    //};
 
-defineArgs returns [int arity=0]: id=arg? 
-    {
-        if ( $id.text != null) { $arity++; }
-    } ( COMMA arg { $arity++; } )*;
+//defineArgs returns [int arity=0]: id=arg? 
+  //  {
+    //    if ( $id.text != null) { $arity++; }
+    //} ( COMMA arg { $arity++; } )*;
 
-value: INT;
+//value: INT;
 
-undef: UNDEF id=arg
-    {
-        if (knownIdsMap.containsKey($id.text)){
-            try{
-                knownIdsMap.remove($id.text);
-            }
-            catch (Exception e) {
-                System.out.println("error: " + npe);
-            }
-        } else {
-            undefUnknownIdOutput($id.start);
-        }
-    };
+//arg: IDENTIFIER;
 
-arg: IDENTIFIER;
-
-butId: OPEN | COMMA | CLOSE | id=unknownId
+butId: OPEN | COMMA | CLOSE | INT | id=unknownId
     {
         unknownIdOutput($id.start);
     };
@@ -104,15 +102,15 @@ unknownId: {!knownIdsMap.containsKey($id)}? id=IDENTIFIER;
 
 
 IDENTIFIER : [a-zA-Z]+ ;
-DEFINE : '#define' ;
-UNDEF : '#undef' ;
+//DEFINE : '#define' ;
+//UNDEF : '#undef' ;
 INT : [-+]?[0-9]+ ;
 WS : [ \t\r\n]+ -> skip ;
 
 UNKNOWNID : [a-zA-Z]+ ;
 OPEN : '(' ;
 CLOSE : ')' ;
-COMMA : ',' ;
+COMMA : [,] ;
 
 
 //text: butId
