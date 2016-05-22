@@ -11,8 +11,8 @@ grammar FindIds;
     public static HashMap<String, ArrayList<Integer>> knownIdsMap;
     static {
         knownIdsMap = new HashMap<String, ArrayList<Integer>>();
-        ArrayList<Integer> f = new ArrayList(Arrays.asList(0, 1, 2, 3));
-        knownIdsMap.put("f", f);
+        // ArrayList<Integer> f = new ArrayList(Arrays.asList(0, 1, 2, 3));
+        // knownIdsMap.put("k", f);
     }
 
     public static String lineCharPos(Token token) {
@@ -20,7 +20,6 @@ grammar FindIds;
     }
 
     public static void knownIdOutput(Token idTok, int arity) {
-    	System.out.println("ASDASDASDASDASDASDASDASDASDASDASDS");
         String id = idTok.getText();
         if ( knownIdsMap.get(id).contains(arity) ){
             System.out.println("Found id " + id + " satisfied arity " + arity + lineCharPos(idTok));
@@ -40,45 +39,51 @@ grammar FindIds;
         System.out.println("ERROR undefine <unknown_id>: " + idTok.getText() + lineCharPos(idTok));
     }
 
+    public static void defineOutput(Token idTok, ArrayList<Integer> l) {
+        System.out.println("Defined a new id " + idTok.getText() + " with " + l + lineCharPos(idTok));
+    }
+
     public static void debugInfo() {
         System.out.println("######## knownIdsMap="+ knownIdsMap);
     }
 }
 
-prog: text*
+prog: (butId | text) prog
     {
         debugInfo();
     };
 
-//text: define | undef | butId | apply ;
-text: butId | butId apply;
+text: butId text
+    | apply text
+    | undef text
+    | define text
+    | SHEBANG;
 
-//define: DEFINE declaration;
+define: DEFINE id=unknownId OPEN defArgs=defineArgs CLOSE val=value
+    {
+        ArrayList<Integer> l = new ArrayList<Integer>();
+        for (int i=0; i<$defArgs.arity; i++){ l.add(i); }
+        knownIdsMap.put($id.text, l);
+        defineOutput($id.start, l);
+    };
 
-//undef: UNDEF id=arg
-  //  {
-    //    if (knownIdsMap.containsKey($id.text)) {
-      //  	knownIdsMap.remove($id.text);
-        //} else {
-          //  undefUnknownIdOutput($id.start);
-        //}
-//    };
+undef: UNDEF id=arg
+   {
+       if (knownIdsMap.containsKey($id.text)) {
+       	knownIdsMap.remove($id.text);
+        } else {
+           undefUnknownIdOutput($id.start);
+        }
+   };
 
-//declaration: id=unknownId OPEN defArgs=defineArgs CLOSE val=value
-  //  {
-    //    ArrayList<Integer> l = new ArrayList<Integer>();
-      //  for (int i=0; i<$defArgs.arity; i++){ l.add(i); }
-        //knownIdsMap.put($id.text, l);
-    //};
+defineArgs returns [int arity=0]: id=arg? 
+   {
+       if ( $id.text != null) { $arity++; }
+    } ( COMMA arg { $arity++; } )*;
 
-//defineArgs returns [int arity=0]: id=arg? 
-  //  {
-    //    if ( $id.text != null) { $arity++; }
-    //} ( COMMA arg { $arity++; } )*;
+value: INT;
 
-//value: INT;
-
-//arg: IDENTIFIER;
+arg: IDENTIFIER;
 
 butId: OPEN | COMMA | CLOSE | INT | id=unknownId
     {
@@ -102,12 +107,13 @@ unknownId: {!knownIdsMap.containsKey($id)}? id=IDENTIFIER;
 
 
 IDENTIFIER : [a-zA-Z]+ ;
-//DEFINE : '#define' ;
-//UNDEF : '#undef' ;
+DEFINE : '#define' ;
+UNDEF : '#undef' ;
 INT : [-+]?[0-9]+ ;
 WS : [ \t\r\n]+ -> skip ;
 
 UNKNOWNID : [a-zA-Z]+ ;
+SHEBANG : '!#' ;
 OPEN : '(' ;
 CLOSE : ')' ;
 COMMA : [,] ;
